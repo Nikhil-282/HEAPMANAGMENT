@@ -14,20 +14,6 @@ typedef struct meta_data{
 
 #define threshold sizeof(meta_data)
 
-typedef struct Node
-{
-    short int data;
-    short int ptrCount;
-    short int inDegree;
-    short int marked;
-    struct Node *next[3];
-} Node;
-
-typedef struct Root
-{
-    Node *root;
-} Root;
-
 meta_data* strt = (void*)heap;
 
 void initialise_heap(){
@@ -96,7 +82,7 @@ void deallocate(void* p){
             trav = trav -> next;
         }
         if(trav == NULL){
-            printf("- * - succesfully freed up the memory - * -  ");
+            printf("enter valid address to deallocate\n\n");
         }
         else{
             if(prev == NULL || prev -> curr_status == allocated){
@@ -121,182 +107,24 @@ void deallocate(void* p){
                     prev -> size += 2 * threshold + trav -> size + next_block -> size;
                 }
             }
-            printf("- * - succesfully freed up the memory - * -  ");
+            printf("- * - succesfully freed up the memory - * -\n\n");
         }
         
     }
 }
 
-Node *createNode(int val, int noPtr)
-{
-    Node *newNode = (Node *)allocate(sizeof(Node));
-    newNode->ptrCount = noPtr;
-    newNode->inDegree = 0;
-    newNode->data = val;
-    newNode->marked = 0;
-}
-
-void initializeMatrix(int matrix[8][8])
-{
-    for (int i = 0; i < 8; i++){
-        for (int j = 0; j < 8; j++){
-            matrix[i][j] = 0;
-        }
-    }
-}
-
-void print(int matrix[8][8])
-{
-    for (int i = 0; i < 8; i++)
-    {
-        for (int j = 0; j < 8; j++)
-            printf("%d ", matrix[i][j]);
-        printf("\n");
-    }
-    printf("\n\n");
-}
-
-void adj_matrix(Node *root, int matrix[8][8])
-{
-    for (int i = 0; i < root->ptrCount; i++)
-    {
-        matrix[root->data][root->next[i]->data] = 1;
-        adj_matrix(root->next[i], matrix);
-    }
-}
-
-void addMatrix(int adjMatrix1[8][8], int adjMatrix2[8][8], int resMatrix[8][8])
-{
-    for (int i = 0; i < 8; i++){
-        for (int j = 0; j < 8; j++)
-            resMatrix[i][j] = adjMatrix1[i][j] + adjMatrix2[i][j];
-    }
-}
-
-void RC(int adjMatrix1[8][8], int adjMatrix2[8][8], Node *heapArray[8])
-{
-    int zeros;
-    int resMatrix[8][8];
-    addMatrix(adjMatrix1, adjMatrix2, resMatrix);
-
-    for (int col = 0; col < 8; col++)
-    {
-        if (heapArray[col]->marked == 0)
-        {
-            zeros = 0;
-            for (int row = 0; row < 8; row++)
-            {
-                if (resMatrix[row][col] == 0)
-                    zeros++;
-            }
-
-            if (zeros == 8)
-            {
-                deallocate((void *)heapArray[col]);
-                printf("(Node-%d).\n", col);
-            }
-        }
-    }
-}
-
-void mark(int adjMatrix1[8][8], int adjMatrix2[8][8], Node *heapArray[8])
-{
-    int zeros;
-    int resMatrix[8][8];
-    addMatrix(adjMatrix1, adjMatrix2, resMatrix);
-
-    for (int col = 0; col < 8; col++)
-    {
-        if (heapArray[col]->marked == 0)
-        {
-            zeros = 0;
-            for (int row = 0; row < 8; row++)
-            {
-                if (resMatrix[row][col] == 0)
-                    zeros++;
-            }
-
-            if (zeros != 8)
-            {
-                heapArray[col]->marked = 1;
-                printf("Marked Node-%d as not garbage.\n", col);
-            }
-        }
-        else
-        {
-            heapArray[col]->marked = 1;
-            printf("Marked Node-%d as not garbage.\n", col);
-        }
-    }
-    printf("\n");
-}
-
-void sweep(Node *heapArray[8])
-{
-    for (int i = 0; i < 8; i++)
-    {
-        if (heapArray[i]->marked == 0)
-        {
-            deallocate((void *)heapArray[i]);
-            printf("(Node-%d).\n", i);
-        }
-
-        if (i != 0 && i != 3)
-            heapArray[i]->marked = 0;
-    }
-}
-
 int main(){
     initialise_heap();
-    Node *n1,*n2,*n3,*n5,*n7,*n8,*n9,*n10;
-    //creating nodes
-    n1 = createNode(0, 3);
-    n2 = createNode(1, 0);
-    n3 = createNode(2, 2);
-    n5 = createNode(3, 1);
-    n7 = createNode(4, 2);
-    n8 = createNode(5, 1);
-    n9 = createNode(6, 0);
-    n10 = createNode(7, 0);
-    //connecting the graph
-    n1->next[0] = n2;
-    n1->next[1] = n9;
-    n1->next[2] = n10;
-    n3->next[0] = n8;
-    n3->next[1] = n10;
-    n5->next[0] = n1;
-    n7->next[0] = n1;
-    n7->next[1] = n8;
-    n8->next[0] = n9;
-    //pointing from root
-    Root root1, root2;
-    root1.root = n5;
-    n5->marked = 1;
-    root2.root = n1;
-    n1->marked = 1;
-    //adjacency matrices
-    int adj1[8][8];
-    int adj2[8][8];
-    initializeMatrix(adj1);
-    initializeMatrix(adj2);
-
-    adj_matrix(root1.root , adj1);
-    print(adj1);
-    adj_matrix(root2.root , adj2);
-    print(adj2);
-    Node *temp[8] = {n1,n2,n3,n5,n7,n8,n9,n10};
-    //reference count
-    RC(adj1, adj2, temp);
-    adj_matrix(root1.root, adj1);
-    print(adj1);
-    adj_matrix(root2.root, adj2);
-    print(adj2);
-    //marksweep
-    mark(adj1, adj2, temp);
-    sweep(temp);
-    print(adj1);
-    print(adj2);
-
+    int* p = (int*)allocate(sizeof(int)*10);
+    float* q = (float*)allocate(sizeof(float) * 100);
+    char* r = (char*)allocate(sizeof(char) * 200);
+    char* s = (char*)allocate(sizeof(char) * 0);
+    deallocate(p);
+    deallocate(q);
+    deallocate(r);
+    int* t = (int*)allocate(sizeof(int)*50);
+    int* z = (int*)allocate(sizeof(int)*10);
     display();
+
     return 0;
 }
